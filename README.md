@@ -1,4 +1,4 @@
-Lab 1
+CSC - 480 Repository 
 ==============================
 
 Cookiecutter Data Science project structure
