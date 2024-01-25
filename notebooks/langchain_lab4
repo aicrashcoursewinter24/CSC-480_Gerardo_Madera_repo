@@ -1,0 +1,293 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyNmJJ9zDmA7S1qC1Allxhjx",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/aicrashcoursewinter24/CSC-480_Gerardo_Madera_repo/blob/lab_4_branch/notebooks/langchain_lab4\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "This is Gerardo Madera's Lab 4: Playing with Agents, Tools, Langchain.\n",
+        "\n",
+        "\"Lab: creating simple LLMChains with memory, and Agents without memory, with the goal of: getting a working Agent with memory and a few simple tools.  PR can be in a colab notebook, or just python code that works in the REPL \"\n",
+        "\n",
+        "*The ChatBot the I \"TRY\" to make isn't quite accurte or working as I intend for it to work but this lab tought me how to work/creat agents and Langchain I tried my best to make it work and I know if I work at it hard some more I wil eventully getting it running propery.*\n",
+        "\n",
+        "\n"
+      ],
+      "metadata": {
+        "id": "XVmx9P_t0ZR_"
+      }
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "_5ikXDH0MhKe"
+      },
+      "outputs": [],
+      "source": [
+        "# Installing of langchin and huggingface\n",
+        "\n",
+        "!pip install langchain\n",
+        "!pip install langchain-community\n",
+        "!pip install huggingface_hub\n",
+        "!pip install --upgrade langchain-community huggingface_hub\n",
+        "# !pip install python-dotenv\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Importing necessary libraries\n",
+        "from langchain import HuggingFaceHub\n",
+        "from langchain import LLMChain\n",
+        "from dotenv import load_dotenv\n",
+        "from langchain.prompts import PromptTemplate\n",
+        "import os\n"
+      ],
+      "metadata": {
+        "id": "PE9a89IQWa0j"
+      },
+      "execution_count": 8,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from google.colab import userdata\n",
+        "\n",
+        "# Retrieve the API key\n",
+        "api_key = userdata.get('huggingfacehub_api_token')"
+      ],
+      "metadata": {
+        "id": "2iQxDxJjYHCW"
+      },
+      "execution_count": 6,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# LLMChain requirement\n",
+        "# Initialize HuggingFaceHub with GPT-2 and the API key\n",
+        "hub_llm = HuggingFaceHub(\n",
+        "    repo_id='gpt2',  # Use the GPT-2 model\n",
+        "    model_kwargs={'temperature': 0.5, 'max_length': 150}, # Parameters to control generation\n",
+        "    huggingfacehub_api_token=api_key  # Pass the API key here\n",
+        ")"
+      ],
+      "metadata": {
+        "id": "-ZFb4RMZWdC1"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Define a prompt template for storytelling \"integral part of LLMChain\"\n",
+        "story_prompt = PromptTemplate(\n",
+        "    input_variables=[\"story_topic\"],\n",
+        "    template=\"Write a creative story about the following topic: '{story_topic}'. The story should revolve around this theme:\"\n",
+        ")"
+      ],
+      "metadata": {
+        "id": "0sQkKkk6WufE"
+      },
+      "execution_count": 10,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Initialize LLMChain with the storytelling prompt\n",
+        "story_chain = LLMChain(prompt=story_prompt, llm=hub_llm, verbose=True)"
+      ],
+      "metadata": {
+        "id": "1Bj8NCVDW2Y4"
+      },
+      "execution_count": 11,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Memory requirement, Class to handle chatbot memory\n",
+        "class ChatbotMemory:\n",
+        "    def __init__(self):\n",
+        "        self.history = [] # Stores the history of interactions\n",
+        "\n",
+        "    def update_memory(self, interaction):\n",
+        "        self.history.append(interaction) # Adds new interaction to memory"
+      ],
+      "metadata": {
+        "id": "savJMRCfV0oa"
+      },
+      "execution_count": 12,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Code that I was trying to make work on my local setup was having trouble so came to colab.\n",
+        "\n",
+        "# # Chat bot class\n",
+        "# class ChatbotAgent:\n",
+        "#     def __init__(self, huggingfacehub_api_token):\n",
+        "#         self.llm = huggingface_hub.HuggingFaceHub(huggingfacehub_api_token=huggingfacehub_api_token)\n",
+        "#         self.memory = ChatbotMemory()\n",
+        "\n",
+        "#     def generate_response(self, input_text):\n",
+        "#         # Combine history for context\n",
+        "#         context = \" \".join(self.memory.history)\n",
+        "#         response = self.llm.generate(context + input_text)\n",
+        "#         # Update memory\n",
+        "#         self.memory.update_memory(input_text)\n",
+        "#         self.memory.update_memory(response)\n",
+        "#         return response\n",
+        "\n",
+        "#     def generate_response(self, input_text):\n",
+        "#         # Combine history for context\n",
+        "#         context = \" \".join(self.memory.history)\n",
+        "#         combined_input = context + \" \" + input_text\n",
+        "#         # Generate response\n",
+        "#         llm_result = self.llm.generate([combined_input])\n",
+        "#         # Extract text from LLMResult (modify this according to the actual structure of LLMResult)\n",
+        "#         response_text = \"your_method_to_get_text_here\"  # Placeholder: replace get_text() with the actual method/attribute\n",
+        "\n",
+        "#         # Update memory\n",
+        "#         self.memory.update_memory(input_text)\n",
+        "#         if response_text:\n",
+        "#             self.memory.update_memory(response_text)\n",
+        "#             return response_text\n",
+        "#         return \"\""
+      ],
+      "metadata": {
+        "id": "ft63kSLh7cia"
+      },
+      "execution_count": 13,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Class defining the chatbot agent requirement\n",
+        "class ChatbotAgent:\n",
+        "    def __init__(self):\n",
+        "        self.story_chain = story_chain # Utilizes LLMChain for generating responses\n",
+        "        self.memory = ChatbotMemory() # Incorporates memory for context awareness\n",
+        "\n",
+        "    def generate_response(self, input_text):\n",
+        "        # Use the input_text as the story topic\n",
+        "        context = \" \".join(self.memory.history[-5:])  # Last 5 interactions\n",
+        "        combined_input = f\"{context} {input_text}\"\n",
+        "        response = self.story_chain.run(story_topic=combined_input) # Generates response using LLMChain\n",
+        "        # Update memory with input and response\n",
+        "        self.memory.update_memory(input_text)\n",
+        "        if response:\n",
+        "            self.memory.update_memory(response)\n",
+        "            return response\n",
+        "        return \"\""
+      ],
+      "metadata": {
+        "id": "kECrHpFoV4Mq"
+      },
+      "execution_count": 14,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Initialize the chatbot instance\n",
+        "chatbot = ChatbotAgent()\n",
+        "\n",
+        "# Start an interactive chat session, REPL requirement\n",
+        "print(\"Storytelling Chatbot is ready! Type 'quit' to exit.\")\n",
+        "\n",
+        "while True:\n",
+        "    story_topic = input(\"Enter a story topic: \")\n",
+        "    if story_topic.lower() == 'quit':\n",
+        "        break\n",
+        "    story = chatbot.generate_response(story_topic)\n",
+        "    print(\"Chatbot's Story:\", story)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "NSVu3ujTO3hR",
+        "outputId": "845a4856-4c9b-4a6e-ff15-ced0a9867df8"
+      },
+      "execution_count": 16,
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "Storytelling Chatbot is ready! Type 'quit' to exit.\n",
+            "Enter a story topic: Guy name Nick\n",
+            "\n",
+            "\n",
+            "\u001b[1m> Entering new LLMChain chain...\u001b[0m\n",
+            "Prompt after formatting:\n",
+            "\u001b[32;1m\u001b[1;3mWrite a creative story about the following topic: ' Guy name Nick'. The story should revolve around this theme:\u001b[0m\n",
+            "\n",
+            "\u001b[1m> Finished chain.\u001b[0m\n",
+            "Chatbot's Story:  'Guy name Nick'.\n",
+            "Enter a story topic: Nick\n",
+            "\n",
+            "\n",
+            "\u001b[1m> Entering new LLMChain chain...\u001b[0m\n",
+            "Prompt after formatting:\n",
+            "\u001b[32;1m\u001b[1;3mWrite a creative story about the following topic: 'Guy name Nick  'Guy name Nick'. Nick'. The story should revolve around this theme:\u001b[0m\n",
+            "\n",
+            "\u001b[1m> Finished chain.\u001b[0m\n",
+            "Chatbot's Story:  Nick is a man who has lost his home and his family to the crime. Nick is a man who is haunted by his past. Nick is a man who is haunted by his past. Nick is a man who is haunted by his past. Nick is a man who is haunted by his past. Nick is a man who is haunted by his past. Nick is a man who is haunted by his past. Nick is a man who is haunted by his past. Nick is a man who is haunted by his past. Nick is a man who is haunted by his past. Nick is a man who\n",
+            "Enter a story topic: quit\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "In **lab 4** I \"**TRY**\" to make a story telling Chat bot using the Huggingface model 'gpt2'. I implemented and agent without memory \"with the goal of: getting a working Agent with memory and a few simple tools.\"\n",
+        "\n",
+        "'**ChatbotAgent**' clas as the **working agent** of the application as It's responsible for interacting with the user, processing inputs, and generating responses.\n",
+        "\n",
+        "'**ChatbotMemory**' class as the **memory** and It stores the history of interactions, which includes both the user's inputs and the chatbot's responses. That then is utilized to provide context to the GPT-2 model for generating responses in the 'ChatbotAgent' class.\n",
+        "\n",
+        "In '**generate_response**' I then try to us the last few interactions are combined with the current input to form a context-aware prompt, Then in thoery it's able to use the history and recall back.\n",
+        "\n",
+        "Some few **tools** used where:\n",
+        "LLMChain, HuggingFaceHub's PromptTemplate help generate the responses to help the bot  function.\n"
+      ],
+      "metadata": {
+        "id": "jnIzz0vLaJgJ"
+      }
+    }
+  ]
+}
